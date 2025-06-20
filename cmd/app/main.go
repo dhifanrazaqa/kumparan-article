@@ -33,14 +33,14 @@ func main() {
 
 	dbPool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
-		log.Fatalf("Tidak dapat terhubung ke database: %v\n", err)
+		log.Fatalf("Could not connect to database: %v\n", err)
 	}
 	defer dbPool.Close()
 
 	mainRouter := http.NewServeMux()
 	mainRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Selamat datang di aplikasi Go!"))
+		w.Write([]byte("Welcome to the Go Web Application!"))
 	})
 
 	srv := &http.Server{
@@ -49,22 +49,22 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("Server mulai di port %s", port)
+		log.Printf("Server started on port %s", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Gagal memulai server: %v", err)
+			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Menerima sinyal shutdown, mematikan server...")
+	log.Println("Received shutdown signal, shutting down server...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("Server shutdown gagal: %v", err)
+		log.Fatalf("Server shutdown failed: %v", err)
 	}
-	log.Println("Server berhasil dimatikan.")
+	log.Println("Server shut down successfully.")
 }
