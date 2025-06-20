@@ -1,0 +1,44 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Output of the Go compiler
+*.out
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Logs and debug
+*.log
+
+# IDE / Editor directories and files
+.vscode/
+.idea/
+*.swp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Env & Config
+.env
+.env.local
+.env.*.local
+
+# Cache
+.cache/
+tmp/
+*.tmp
+
+# AIR (live reload tool)
+.air
+.air.toml
+tmp/
+
+# Coverage reports
+coverage.out
