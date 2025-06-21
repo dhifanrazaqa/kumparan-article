@@ -5,14 +5,18 @@ import (
 	"net/http"
 )
 
-func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
+func WriteJSON(w http.ResponseWriter, status int, message string, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	if data != nil {
-		json.NewEncoder(w).Encode(data)
+	response := map[string]interface{}{
+		"message": message,
 	}
+	if data != nil {
+		response["data"] = data
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 func WriteError(w http.ResponseWriter, status int, message string) {
-	WriteJSON(w, status, map[string]string{"error": message})
+	WriteJSON(w, status, message, nil)
 }
