@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -53,27 +54,27 @@ func (s *articleService) GetArticles(ctx context.Context, params models.ListArti
 		articles, err = s.repo.FindAll(ctx, params)
 		return err
 	})
-
 	g.Go(func() error {
 		var err error
 		total, err = s.repo.CountAll(ctx, params)
 		return err
 	})
-
+	
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
-
+	
 	totalPages := 0
 	if total > 0 && params.Limit > 0 {
 		totalPages = int((total + int64(params.Limit) - 1) / int64(params.Limit))
 	}
-
+	
 	currentPage := 1
 	if params.Limit > 0 {
 		currentPage = (params.Offset / params.Limit) + 1
 	}
-
+	
+	fmt.Println(articles)
 	return &models.PaginatedArticles{
 		Data:       articles,
 		Total:      total,

@@ -41,7 +41,7 @@ func (r *pgxArticleRepo) FindByID(ctx context.Context, id string) (*models.Artic
 	query := `
 		SELECT
 			a.id, a.title, a.body, a.author_id, a.created_at, a.updated_at,
-			u.username as author_name, u.created_at as author_created_at, u.updated_at as author_updated_at
+			u.username as author_username, u.name as author_name, u.created_at as author_created_at, u.updated_at as author_updated_at
 		FROM articles a
 		JOIN users u ON a.author_id = u.id
 		WHERE a.id = $1`
@@ -52,7 +52,7 @@ func (r *pgxArticleRepo) FindByID(ctx context.Context, id string) (*models.Artic
 	var author models.UserResponse
 	err := row.Scan(
 		&article.ID, &article.Title, &article.Body, &article.AuthorID, &article.CreatedAt, &article.UpdatedAt,
-		&author.Username, &author.CreatedAt, &author.UpdatedAt,
+		&author.Username, &author.Name, &author.CreatedAt, &author.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -70,7 +70,7 @@ func (r *pgxArticleRepo) FindAll(ctx context.Context, params models.ListArticles
 	queryBuilder.WriteString(`
 		SELECT
 			a.id, a.title, a.body, a.author_id, a.created_at, a.updated_at,
-			u.username as author_name
+			u.username, u.name, u.created_at, u.updated_at
 		FROM articles a
 		JOIN users u ON a.author_id = u.id
 	`)
@@ -80,7 +80,7 @@ func (r *pgxArticleRepo) FindAll(ctx context.Context, params models.ListArticles
 
 	if params.Author != "" {
 		args = append(args, params.Author)
-		conditions = append(conditions, fmt.Sprintf("u.username = $%d", len(args)))
+		conditions = append(conditions, fmt.Sprintf("LOWER(u.name) = LOWER($%d)", len(args)))
 	}
 	if params.Query != "" {
 		searchQuery := strings.Join(strings.Fields(params.Query), " & ")
@@ -110,10 +110,10 @@ func (r *pgxArticleRepo) FindAll(ctx context.Context, params models.ListArticles
 		var author models.UserResponse
 		err := rows.Scan(
 			&article.ID, &article.Title, &article.Body, &article.AuthorID, &article.CreatedAt, &article.UpdatedAt,
-			&author.Username,
+			&author.Username, &author.Name, &author.CreatedAt, &author.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("gagal memindai baris artikel: %w", err)
+			return nil, fmt.Errorf("failed to scan article row: %w", err)
 		}
 		author.ID = article.AuthorID
 		article.Author = &author
@@ -121,7 +121,7 @@ func (r *pgxArticleRepo) FindAll(ctx context.Context, params models.ListArticles
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("error setelah iterasi baris: %w", err)
+		return nil, fmt.Errorf("error after iterating rows: %w", err)
 	}
 
 	return articles, nil
@@ -140,7 +140,7 @@ func (r *pgxArticleRepo) CountAll(ctx context.Context, params models.ListArticle
 
 	if params.Author != "" {
 		args = append(args, params.Author)
-		conditions = append(conditions, fmt.Sprintf("u.username = $%d", len(args)))
+		conditions = append(conditions, fmt.Sprintf("LOWER(u.name) = LOWER($%d)", len(args)))
 	}
 	if params.Query != "" {
 		searchQuery := strings.Join(strings.Fields(params.Query), " & ")
