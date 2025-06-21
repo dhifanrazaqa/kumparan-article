@@ -30,7 +30,7 @@ func NewPgxUserRepo(pool *pgxpool.Pool) UserRepository {
 }
 
 func (r *pgxUserRepo) Create(ctx context.Context, user *models.User) error {
-	query := `INSERT INTO users (username, hashed_password) RETURNING id, created_at, updated_at`
+	query := `INSERT INTO users (username, hashed_password) VALUES ($1, $2) RETURNING id, created_at, updated_at`
 	row := r.pool.QueryRow(ctx, query, user.Username, user.HashedPassword)
 	err := row.Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	return err
@@ -67,7 +67,7 @@ func (r *pgxUserRepo) FindByUsername(ctx context.Context, username string) (*mod
 }
 
 func (r *pgxUserRepo) FindAll(ctx context.Context) ([]models.User, error) {
-	query := `SELECT id, username, created_at, updated_at FROM users ORDER BY created_at DESC`
+	query := `SELECT id, username, hashed_password, created_at, updated_at FROM users ORDER BY created_at DESC`
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -81,6 +81,7 @@ func (r *pgxUserRepo) FindAll(ctx context.Context) ([]models.User, error) {
 
 	return users, nil
 }
+
 func (r *pgxUserRepo) Update(ctx context.Context, user *models.User) error {
 	query := `UPDATE users SET username = $1, hashed_password = $2 WHERE id = $3 RETURNING updated_at`
 	row := r.pool.QueryRow(ctx, query, user.Username, user.HashedPassword, user.ID)
