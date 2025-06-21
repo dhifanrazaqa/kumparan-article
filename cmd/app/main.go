@@ -36,7 +36,8 @@ func main() {
 		log.Fatalf("Could not connect to database: %v\n", err)
 	}
 	defer dbPool.Close()
-
+	log.Println("Connected to the database successfully.")
+	
 	mainRouter := http.NewServeMux()
 	mainRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
