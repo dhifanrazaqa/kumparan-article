@@ -102,6 +102,19 @@ docker-compose up --build
 
 -----
 
+## Testing
+Due to limited time, I only created integration tests for the user and unit test for the user service.
+### Setup Testing DB
+ ```bash
+    docker exec -it article-db-postgres psql -U user -d postgres -c "CREATE DATABASE articledb_test;"
+
+    # Run init.sql in Testing DB
+ ```
+### Run the test
+ ```bash
+    go test ./...
+ ```
+
 ## API Endpoint Documentation
 
 ### Authentication (`/auth`)
