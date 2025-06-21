@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -74,7 +73,6 @@ func (s *articleService) GetArticles(ctx context.Context, params models.ListArti
 		currentPage = (params.Offset / params.Limit) + 1
 	}
 	
-	fmt.Println(articles)
 	return &models.PaginatedArticles{
 		Data:       articles,
 		Total:      total,
