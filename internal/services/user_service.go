@@ -16,7 +16,7 @@ var (
 
 type UserService interface {
 	CreateUser(ctx context.Context, req models.CreateUserRequest) (*models.UserResponse, error)
-	GetUsers(ctx context.Context, id string) ([]models.UserResponse, error)
+	GetUsers(ctx context.Context) ([]models.UserResponse, error)
 	GetUserByID(ctx context.Context, id string) (*models.UserResponse, error)
 	UpdateUser(ctx context.Context, id string, req models.UpdateUserRequest, currentUserID string) (*models.UserResponse, error)
 	DeleteUser(ctx context.Context, id string, currentUserID string) error
@@ -63,7 +63,7 @@ func (s *userService) CreateUser(ctx context.Context, req models.CreateUserReque
 	}, nil
 }
 
-func (s *userService) GetUsers(ctx context.Context, id string) ([]models.UserResponse, error) {
+func (s *userService) GetUsers(ctx context.Context) ([]models.UserResponse, error) {
 	users, err := s.userRepo.FindAll(ctx)
 	if err != nil {
 		return nil, err
