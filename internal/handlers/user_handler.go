@@ -6,6 +6,7 @@ import (
 
 	"github.com/dhifanrazaqa/kumparan-article/internal/models"
 	"github.com/dhifanrazaqa/kumparan-article/internal/services"
+	"github.com/dhifanrazaqa/kumparan-article/pkg/middleware"
 	"github.com/dhifanrazaqa/kumparan-article/pkg/utils"
 	"github.com/gorilla/mux"
 )
@@ -69,13 +70,19 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	claims, ok := r.Context().Value(middleware.ClaimsContextKey).(*models.Claims)
+	if !ok {
+		utils.WriteError(w, http.StatusInternalServerError, "Failed to get user data from token")
+		return
+	}
+
 	var req models.UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, "Request body tidak valid")
 		return
 	}
 
-	user, err := h.userService.UpdateUser(r.Context(), id, req, id)
+	user, err := h.userService.UpdateUser(r.Context(), id, req, claims.UserID)
 	if err != nil {
 		utils.WriteError(w, http.StatusForbidden, err.Error())
 		return
@@ -87,7 +94,13 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	err := h.userService.DeleteUser(r.Context(), id, id)
+	claims, ok := r.Context().Value(middleware.ClaimsContextKey).(*models.Claims)
+	if !ok {
+		utils.WriteError(w, http.StatusInternalServerError, "Failed to get user data from token")
+		return
+	}
+
+	err := h.userService.DeleteUser(r.Context(), id, claims.UserID)
 	if err != nil {
 		utils.WriteError(w, http.StatusForbidden, err.Error())
 		return
