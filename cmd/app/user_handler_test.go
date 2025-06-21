@@ -15,17 +15,20 @@ import (
 
 func registerUser(t *testing.T, router http.Handler, user models.CreateUserRequest) models.UserResponse {
 	body, _ := json.Marshal(user)
+
 	req, _ := http.NewRequest("POST", "/users", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
+
 	require.Equal(t, http.StatusCreated, rr.Code)
 
 	var res struct {
 		Data    models.UserResponse `json:"data"`
 		Message string              `json:"message"`
 	}
+
 	err := json.Unmarshal(rr.Body.Bytes(), &res)
 	require.NoError(t, err)
 	return res.Data
@@ -38,6 +41,7 @@ func TestUserHandler_CRUD(t *testing.T) {
 	var userToken string
 	userCredentials := models.CreateUserRequest{
 		Username: "user_crud_test",
+		Name:     "User CRUD Test",
 		Password: "password123",
 	}
 
@@ -49,7 +53,10 @@ func TestUserHandler_CRUD(t *testing.T) {
 	})
 
 	t.Run("login untuk mendapatkan token", func(t *testing.T) {
-		loginBody, _ := json.Marshal(models.LoginRequest(userCredentials))
+		loginBody, _ := json.Marshal(models.LoginRequest{
+			Username: userCredentials.Username,
+			Password: userCredentials.Password,
+		})
 		req, _ := http.NewRequest("POST", "/auth/login", bytes.NewBuffer(loginBody))
 		req.Header.Set("Content-Type", "application/json")
 
@@ -84,7 +91,7 @@ func TestUserHandler_CRUD(t *testing.T) {
 	})
 
 	t.Run("sukses mendapatkan semua user", func(t *testing.T) {
-		registerUser(t, testRouter, models.CreateUserRequest{Username: "user_lain", Password: "passwordlain"})
+		registerUser(t, testRouter, models.CreateUserRequest{Username: "user_lain", Name: "User Lain", Password: "passwordlain"})
 
 		req, _ := http.NewRequest("GET", "/users", nil)
 		rr := httptest.NewRecorder()
@@ -103,7 +110,7 @@ func TestUserHandler_CRUD(t *testing.T) {
 		updateBody, _ := json.Marshal(models.UpdateUserRequest{Username: "user_crud_updated"})
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("/users/%s", createdUserID), bytes.NewBuffer(updateBody))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+userToken) // Menggunakan token
+		req.Header.Set("Authorization", "Bearer "+userToken)
 
 		rr := httptest.NewRecorder()
 		testRouter.ServeHTTP(rr, req)
@@ -118,7 +125,7 @@ func TestUserHandler_CRUD(t *testing.T) {
 	})
 
 	t.Run("gagal memperbarui user lain", func(t *testing.T) {
-		registerUser(t, testRouter, models.CreateUserRequest{Username: "user_lain_2", Password: "passwordlain2"})
+		registerUser(t, testRouter, models.CreateUserRequest{Username: "user_lain_2", Name: "User Lain 2", Password: "passwordlain2"})
 
 		updateBody, _ := json.Marshal(models.UpdateUserRequest{Username: "tidak_akan_berhasil"})
 		updateReq, _ := http.NewRequest("PUT", fmt.Sprintf("/users/%s", createdUserID), bytes.NewBuffer(updateBody))

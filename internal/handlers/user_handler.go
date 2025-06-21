@@ -28,8 +28,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Username == "" || req.Password == "" {
-		utils.WriteError(w, http.StatusBadRequest, "Username and password cannot be empty")
+	if req.Username == "" || req.Name == "" || req.Password == "" {
+		utils.WriteError(w, http.StatusBadRequest, "Username, Name, and password cannot be empty")
 		return
 	}
 
