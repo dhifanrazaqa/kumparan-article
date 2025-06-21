@@ -47,7 +47,7 @@ type RefreshTokenRequest struct {
 }
 
 type Claims struct {
-	UserID   int64  `json:"userId"`
+	UserID   string  `json:"userId"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
