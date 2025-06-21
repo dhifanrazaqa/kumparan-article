@@ -30,6 +30,8 @@ func main() {
 	dbURL := os.Getenv("DATABASE_URL")
 	redisURL := os.Getenv("REDIS_URL")
 	port := os.Getenv("APP_PORT")
+	jwtSecret := os.Getenv("JWT_SECRET")
+	refreshTokenSecret := os.Getenv("REFRESH_TOKEN_SECRET")
 
 	if port == "" {
 		port = "8080"
@@ -56,8 +58,12 @@ func main() {
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
 
+	authService := services.NewAuthService(userRepo, jwtSecret, refreshTokenSecret, redisClient)
+	authHandler := handlers.NewAuthHandler(authService)
+
 	routerDeps := router.Deps{
 		UserHandler: userHandler,
+		AuthHandler: authHandler,
 	}
 
 	mainRouter := router.SetupRouter(routerDeps)
