@@ -34,11 +34,15 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userService.CreateUser(r.Context(), req)
 	if err != nil {
+		if err.Error() == "user already exists" {
+			utils.WriteError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		utils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, user)
+	utils.WriteJSON(w, http.StatusCreated, "User created successfully", user)
 }
 
 func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +51,7 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	utils.WriteJSON(w, http.StatusOK, users)
+	utils.WriteJSON(w, http.StatusOK, "Users retrieved successfully", users)
 }
 
 func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +62,7 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	utils.WriteJSON(w, http.StatusOK, user)
+	utils.WriteJSON(w, http.StatusOK, "User retrieved successfully", user)
 }
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +80,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusForbidden, err.Error())
 		return
 	}
-	utils.WriteJSON(w, http.StatusOK, user)
+	utils.WriteJSON(w, http.StatusOK, "User updated successfully", user)
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -89,5 +93,5 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	utils.WriteJSON(w, http.StatusOK, "User deleted successfully", nil)
 }
