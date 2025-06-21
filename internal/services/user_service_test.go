@@ -47,12 +47,13 @@ func TestUserService_CreateUser(t *testing.T) {
 		mockRepo.On("FindByUsername", mock.Anything, "newuser").Return(nil, repositories.ErrUserNotFound).Once()
 		mockRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.User")).Return(nil).Once()
 
-		req := models.CreateUserRequest{Username: "newuser", Password: "password123"}
+		req := models.CreateUserRequest{Username: "newuser", Name: "New User", Password: "password123"}
 		user, err := userService.CreateUser(context.Background(), req)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, user)
 		assert.Equal(t, "newuser", user.Username)
+		assert.Equal(t, "New User", user.Name)
 		assert.Equal(t, "1e9e25d9-5b6e-4dbc-a5fd-a0bd8aa209de", user.ID)
 
 		mockRepo.AssertExpectations(t)
@@ -62,7 +63,7 @@ func TestUserService_CreateUser(t *testing.T) {
 		existingUser := &models.User{ID: "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6", Username: "existinguser"}
 		mockRepo.On("FindByUsername", mock.Anything, "existinguser").Return(existingUser, nil).Once()
 
-		req := models.CreateUserRequest{Username: "existinguser", Password: "password123"}
+		req := models.CreateUserRequest{Username: "existinguser", Name: "Existing User", Password: "password123"}
 		_, err := userService.CreateUser(context.Background(), req)
 
 		assert.Error(t, err)
@@ -76,7 +77,7 @@ func TestUserService_CreateUser(t *testing.T) {
 		mockRepo.On("FindByUsername", mock.Anything, "anotheruser").Return(nil, repositories.ErrUserNotFound).Once()
 		mockRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.User")).Return(dbError).Once()
 
-		req := models.CreateUserRequest{Username: "anotheruser", Password: "password123"}
+		req := models.CreateUserRequest{Username: "anotheruser", Name: "Another User", Password: "password123"}
 		_, err := userService.CreateUser(context.Background(), req)
 
 		assert.Error(t, err)

@@ -48,6 +48,7 @@ func (s *userService) CreateUser(ctx context.Context, req models.CreateUserReque
 
 	user := &models.User{
 		Username:       req.Username,
+		Name:           req.Name,
 		HashedPassword: hashedPassword,
 	}
 
@@ -58,6 +59,7 @@ func (s *userService) CreateUser(ctx context.Context, req models.CreateUserReque
 	return &models.UserResponse{
 		ID:        user.ID,
 		Username:  user.Username,
+		Name:      user.Name,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}, nil
@@ -74,6 +76,7 @@ func (s *userService) GetUsers(ctx context.Context) ([]models.UserResponse, erro
 		responses[i] = models.UserResponse{
 			ID:        user.ID,
 			Username:  user.Username,
+			Name:      user.Name,
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
 		}
@@ -89,6 +92,7 @@ func (s *userService) GetUserByID(ctx context.Context, id string) (*models.UserR
 	return &models.UserResponse{
 		ID:        user.ID,
 		Username:  user.Username,
+		Name:      user.Name,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}, nil
@@ -107,10 +111,13 @@ func (s *userService) UpdateUser(ctx context.Context, id string, req models.Upda
 	if req.Username != "" {
 		user.Username = req.Username
 	}
+	if req.Name != "" {
+		user.Name = req.Name
+	}
 	if req.Password != "" {
 		hashedPassword, err := utils.HashPassword(req.Password)
 		if err != nil {
-			return nil, errors.New("gagal memproses password baru")
+			return nil, errors.New("failed to process new password")
 		}
 		user.HashedPassword = hashedPassword
 	}
@@ -122,6 +129,7 @@ func (s *userService) UpdateUser(ctx context.Context, id string, req models.Upda
 	return &models.UserResponse{
 		ID:        user.ID,
 		Username:  user.Username,
+		Name:      user.Name,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}, nil
