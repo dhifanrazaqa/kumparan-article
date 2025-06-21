@@ -3,6 +3,7 @@ module github.com/dhifanrazaqa/kumparan-article
 go 1.24.4
 
 require (
+	github.com/gorilla/mux v1.8.1
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 )

@@ -9,6 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/dhifanrazaqa/kumparan-article/internal/handlers"
+	"github.com/dhifanrazaqa/kumparan-article/internal/repositories"
+	"github.com/dhifanrazaqa/kumparan-article/internal/router"
+	"github.com/dhifanrazaqa/kumparan-article/internal/services"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -37,12 +41,16 @@ func main() {
 	}
 	defer dbPool.Close()
 	log.Println("Connected to the database successfully.")
-	
-	mainRouter := http.NewServeMux()
-	mainRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Welcome to the Go Web Application!"))
-	})
+
+	userRepo := repositories.NewPgxUserRepo(dbPool)
+	userService := services.NewUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userService)
+
+	routerDeps := router.Deps{
+		UserHandler: userHandler,
+	}
+
+	mainRouter := router.SetupRouter(routerDeps)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
