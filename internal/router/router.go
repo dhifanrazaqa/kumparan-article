@@ -8,6 +8,8 @@ import (
 type Deps struct {
 	AuthHandler *handlers.AuthHandler
 	UserHandler *handlers.UserHandler
+	ArticleHandler *handlers.ArticleHandler
+	JWTSecret string
 }
 
 func SetupRouter(d Deps) *mux.Router {
@@ -15,6 +17,7 @@ func SetupRouter(d Deps) *mux.Router {
 
 	RegisterAuthRoutes(router, d.AuthHandler)
 	RegisterUserRoutes(router, d.UserHandler)
+	RegisterArticleRoutes(router, d.ArticleHandler, d.JWTSecret)
 
 	return router
 }

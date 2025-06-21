@@ -61,9 +61,15 @@ func main() {
 	authService := services.NewAuthService(userRepo, jwtSecret, refreshTokenSecret, redisClient)
 	authHandler := handlers.NewAuthHandler(authService)
 
+	articleRepo := repositories.NewPgxArticleRepo(dbPool)
+	articleService := services.NewArticleService(articleRepo, redisClient)
+	articleHandler := handlers.NewArticleHandler(articleService)
+
 	routerDeps := router.Deps{
 		UserHandler: userHandler,
 		AuthHandler: authHandler,
+		ArticleHandler: articleHandler,
+		JWTSecret: jwtSecret,
 	}
 
 	mainRouter := router.SetupRouter(routerDeps)

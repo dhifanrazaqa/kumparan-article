@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var ErrArticleNotFound = errors.New("artikel tidak ditemukan")
+var ErrArticleNotFound = errors.New("article not found")
 
 type ArticleRepository interface {
 	Create(ctx context.Context, article *models.Article) error
@@ -19,6 +19,7 @@ type ArticleRepository interface {
 	FindAll(ctx context.Context, params models.ListArticlesParams) ([]models.Article, error)
 	Update(ctx context.Context, article *models.Article) error
 	Delete(ctx context.Context, id string) error
+	CountAll(ctx context.Context, params models.ListArticlesParams) (int64, error)
 }
 
 type pgxArticleRepo struct {
@@ -124,6 +125,36 @@ func (r *pgxArticleRepo) FindAll(ctx context.Context, params models.ListArticles
 	}
 
 	return articles, nil
+}
+
+func (r *pgxArticleRepo) CountAll(ctx context.Context, params models.ListArticlesParams) (int64, error) {
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("SELECT COUNT(*) FROM articles a")
+
+	var args []interface{}
+	var conditions []string
+
+	if params.Author != "" || params.Query != "" {
+		queryBuilder.WriteString(" JOIN users u ON a.author_id = u.id")
+	}
+
+	if params.Author != "" {
+		args = append(args, params.Author)
+		conditions = append(conditions, fmt.Sprintf("u.username = $%d", len(args)))
+	}
+	if params.Query != "" {
+		searchQuery := strings.Join(strings.Fields(params.Query), " & ")
+		args = append(args, searchQuery)
+		conditions = append(conditions, fmt.Sprintf("a.search_vector @@ to_tsquery('english', $%d)", len(args)))
+	}
+
+	if len(conditions) > 0 {
+		queryBuilder.WriteString(" WHERE " + strings.Join(conditions, " AND "))
+	}
+
+	var count int64
+	err := r.pool.QueryRow(ctx, queryBuilder.String(), args...).Scan(&count)
+	return count, err
 }
 
 func (r *pgxArticleRepo) Update(ctx context.Context, article *models.Article) error {

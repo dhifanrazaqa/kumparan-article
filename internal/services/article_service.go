@@ -9,11 +9,12 @@ import (
 	"github.com/dhifanrazaqa/kumparan-article/internal/models"
 	"github.com/dhifanrazaqa/kumparan-article/internal/repositories"
 	"github.com/go-redis/redis"
+	"golang.org/x/sync/errgroup"
 )
 
 type ArticleService interface {
 	CreateArticle(ctx context.Context, req models.CreateArticleRequest, authorID string) (*models.Article, error)
-	GetArticles(ctx context.Context, params models.ListArticlesParams) ([]models.Article, error)
+	GetArticles(ctx context.Context, params models.ListArticlesParams) (*models.PaginatedArticles, error)
 	GetArticleByID(ctx context.Context, id string) (*models.Article, error)
 	UpdateArticle(ctx context.Context, id string, req models.UpdateArticleRequest, currentUserID string) (*models.Article, error)
 	DeleteArticle(ctx context.Context, id string, currentUserID string) error
@@ -41,12 +42,49 @@ func (s *articleService) CreateArticle(ctx context.Context, req models.CreateArt
 	return article, nil
 }
 
-func (s *articleService) GetArticles(ctx context.Context, params models.ListArticlesParams) ([]models.Article, error) {
-	return s.repo.FindAll(ctx, params)
+func (s *articleService) GetArticles(ctx context.Context, params models.ListArticlesParams) (*models.PaginatedArticles, error) {
+	g, ctx := errgroup.WithContext(ctx)
+
+	var articles []models.Article
+	var total int64
+
+	g.Go(func() error {
+		var err error
+		articles, err = s.repo.FindAll(ctx, params)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		total, err = s.repo.CountAll(ctx, params)
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	totalPages := 0
+	if total > 0 && params.Limit > 0 {
+		totalPages = int((total + int64(params.Limit) - 1) / int64(params.Limit))
+	}
+
+	currentPage := 1
+	if params.Limit > 0 {
+		currentPage = (params.Offset / params.Limit) + 1
+	}
+
+	return &models.PaginatedArticles{
+		Data:       articles,
+		Total:      total,
+		Page:       currentPage,
+		Limit:      params.Limit,
+		TotalPages: totalPages,
+	}, nil
 }
 
 func (s *articleService) GetArticleByID(ctx context.Context, id string) (*models.Article, error) {
-	cacheKey := id
+	cacheKey := "article:" + id
 
 	val, err := s.redisClient.Get(cacheKey).Result()
 	if err == nil {

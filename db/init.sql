@@ -24,9 +24,23 @@ CREATE TABLE articles (
         ON DELETE CASCADE
 );
 
-CREATE INDEX idx_articles_title ON articles (title);
+ALTER TABLE articles ADD COLUMN search_vector tsvector;
+
+CREATE OR REPLACE FUNCTION update_search_vector()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector := to_tsvector('english', NEW.title || ' ' || NEW.body);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER articles_search_vector_update
+BEFORE INSERT OR UPDATE ON articles
+FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+
 CREATE INDEX idx_articles_author_id ON articles (author_id);
 CREATE INDEX idx_articles_created_at ON articles (created_at DESC);
+CREATE INDEX idx_articles_search_vector ON articles USING GIN (search_vector);
 
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
 RETURNS TRIGGER AS $$

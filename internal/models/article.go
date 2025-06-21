@@ -28,3 +28,11 @@ type ListArticlesParams struct {
 	Limit  int
 	Offset int
 }
+
+type PaginatedArticles struct {
+	Data       []Article `json:"data"`
+	Total      int64     `json:"total"`
+	Page       int       `json:"page"`
+	Limit      int       `json:"limit"`
+	TotalPages int       `json:"totalPages"`
+}
