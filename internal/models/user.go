@@ -39,7 +39,6 @@ type LoginRequest struct {
 type AuthResponse struct {
 	AccessToken  string       `json:"accessToken"`
 	RefreshToken string       `json:"refreshToken"`
-	User         UserResponse `json:"user"`
 }
 
 type RefreshTokenRequest struct {
